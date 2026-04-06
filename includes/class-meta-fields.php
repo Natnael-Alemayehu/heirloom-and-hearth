@@ -14,7 +14,7 @@
  * Ingredient meta:
  *  _hh_supplier_id     (integer) - Post ID of the linked hh_supplier.
  *  _hh_stock_status    (string) - available | low_stock | out_of_season.
- *  _hh_last_update     (string) - ISO-8601 timestamp, auto-set on save.
+ *  _hh_last_updated     (string) - ISO-8601 timestamp, auto-set on save.
  * 
  * @package HeirloomHearth
  */
