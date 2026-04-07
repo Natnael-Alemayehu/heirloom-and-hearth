@@ -10,13 +10,13 @@
 
 namespace HeirloomHearth;
 
-define( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 /**
  * Class CPT_Registration
  */
 
-class CPT_Registation {
+class CPT_Registration {
     /**
      * Register both CPTs.
      * 
@@ -30,7 +30,7 @@ class CPT_Registation {
 
     // Suppliers
     /**
-     * Register the `hh_suppluer` CPT.
+     * Register the `hh_supplier` CPT.
      * 
      * @return void
      */
@@ -77,16 +77,30 @@ class CPT_Registation {
         $labels = array(
             'name' => _x('Daily Ingredients', 'post type general name', 'heirloom-hearth'),
             'singular_name' => _x('Ingredient', 'post type singular name', 'heirloom-hearth'),
-            'menu_name' => __('Daily Ingredinets', 'heirloom-hearth'),
+            'menu_name' => __('Daily Ingredients', 'heirloom-hearth'),
             'add_new' => __('Add New', 'heirloom-hearth'),
             'add_new_item' => __('Add New Ingredient', 'heirloom-hearth'),
             'edit_item' => __('Edit Ingredient', 'heirloom-hearth'),
-            'new_item' => __('Add New', 'heirloom-hearth'),
-            'add_new_item' => __('Add New Ingredient', 'heirloom-hearth'),
+            'new_item' => __('New Ingredient', 'heirloom-hearth'),
             'view_item' => __('View Ingredients', 'heirloom-hearth'),
             'search_items' => __('Search Ingredients', 'heirloom-hearth'),
             'not_found' => __('No ingredients found.', 'heirloom-hearth'),
             'not_found_in_trash' => __('No Ingredients found in Trash.', 'heirloom-hearth'),
+        );
+
+        $args = array(
+            'labels'    => $labels,
+            'public'    => true,
+            'show_ui'   => true,
+            'show_in_menu' => true,
+            'show_in_rest' => true,
+            'rest_base' => 'hh-ingredients',
+            'menu_icon' => 'dashicons-carrot',
+            'supports' => array('title', 'editor', 'thumbnail'),
+            'has_archive' => false,
+            'rewrite' => false,
+            'capability_type' => 'post',
+            'map_meta_cap' => true,
         );
 
         register_post_type('hh_ingredient', $args);
@@ -116,7 +130,7 @@ class CPT_Registation {
             'hh_ingredient',
             array(
                 'labels'            => $labels,
-                'heirarchical'      => true,
+                'hierarchical'      => true,
                 'show_ui'           => true,
                 'show_in_rest'      => true,
                 'show_admin_column' => true,

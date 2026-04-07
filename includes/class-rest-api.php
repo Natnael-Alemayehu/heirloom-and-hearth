@@ -14,13 +14,13 @@
 
 namespace HeirloomHearth;
 
-defined ( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 /**
  * Class REST_API
  */
 
-class REST_API{
+class REST_API {
     /** API namespace. */
     private const NAMESPACE = 'hh/v1';
 
@@ -51,7 +51,7 @@ class REST_API{
             '/' . self::BASE . '/(?P<id>\d+)',
             array(
                 'methods'               => \WP_REST_Server::READABLE,
-                'callable'              => array($this, 'get_single_ingredient'),
+                'callback'              => array($this, 'get_single_ingredient'),
                 'permission_callback'   => '__return_true',
                 'args'                  => array(
                     'id'    => array(
@@ -77,10 +77,10 @@ class REST_API{
 
     // GET /hh/v1/sourcing
     /**
-     * Retrun a list of all published ingredients with nested suplier data.
-     * 
+     * Return a list of all published ingredients with nested supplier data.
+     *
      * Supports ?status=available|low_stock|out_of_season for filtering.
-     * 
+     *
      * @param \WP_REST_Request      $request Full request object.
      * @return \WP_REST_Response | \WP_Error
      */
@@ -88,16 +88,16 @@ class REST_API{
         $query_args = array(
             'post_type'     => 'hh_ingredient',
             'post_status'   => 'publish',
-            'post_per_page' => -1,
+            'posts_per_page' => -1,
             'orderby'       => 'title',
             'order'         => 'ASC',
             'no_found_rows' => true,
         );
 
-        // Optional filder by stock status.
+        // Optional filter by stock status.
         $status = $request->get_param('status');
         if($status) {
-            $query_ags['meta_query'] = array(
+            $query_args['meta_query'] = array(
                 array(
                     'key'       => '_hh_stock_status',
                     'value'     => sanitize_key($status),
@@ -106,15 +106,15 @@ class REST_API{
             );
         }
 
-        // Optional filder by supplier post ID.
-        $suplier_id = absint($request->get_param('supplier_id'));
-        if($suplier_id) {
+        // Optional filter by supplier post ID.
+        $supplier_id = absint($request->get_param('supplier_id'));
+        if($supplier_id) {
             $supplier_meta = array(
                 array(
                     'key'       => '_hh_supplier_id',
-                    'value'     => $suplier_id, 
-                    'compate'   => '=',
-                    'type'      => 'NUMERIC',    
+                    'value'     => $supplier_id,
+                    'compare'   => '=',
+                    'type'      => 'NUMERIC',
                 ),
             );
             if (isset($query_args['meta_query'])) {
@@ -125,7 +125,7 @@ class REST_API{
             }
         }
 
-        // Optional filder by supplier category.
+        // Optional filter by supplier category.
         $category = $request->get_param('category');
         if($category) {
             $query_args['tax_query'] = array(
@@ -137,8 +137,8 @@ class REST_API{
             );
         }
 
-        // Optional filder by supplier taxonomy.
-        $query = new \WP_Query( $query_ags );
+        // Optional filter by supplier taxonomy.
+        $query = new \WP_Query( $query_args );
         $ingredients = array();
 
         foreach( $query -> posts as $post ) {
@@ -213,7 +213,7 @@ class REST_API{
         $post = get_post($ingredient_id);
 
         if ( !$post || 'hh_ingredient' !== $post->post_type ) {
-            return new \WP_Erorr(
+            return new \WP_Error(
                 'hh_ingredient_not_found',
                 __('Ingredient not found', 'heirloom-hearth'),
                 array('status'=> 404)
@@ -221,7 +221,7 @@ class REST_API{
         }
 
         // Verify the ingredient belongs to the current user's supplier profile.
-        if (!$this -> ingredient_belongs_to_current_user($ingredient_id)) {
+        if (!$this->ingredient_belongs_to_current_user($ingredient_id)) {
             return new \WP_Error(
                 'hh_rest_ownership_denied',
                 __('You can only update stock for ingredients linked to your own supplier profile.', 'heirloom-hearth'),
@@ -236,7 +236,7 @@ class REST_API{
      * Handle the stock status update POST request.
      * 
      * writes the new stock status to post meta and re-stamps _hh_last_updated
-     * (the meta-field registration also does this on save_post, providing a bouble
+     * (the meta-field registration also does this on save_post, providing a double
      * safety net).
      * 
      * @param \WP_REST_Request $request Full request object.
@@ -251,7 +251,7 @@ class REST_API{
         update_post_meta($ingredient_id, '_hh_last_updated', $timestamp);
 
         // Touch the post so cache layers notice the change.
-        wp_update_psot(
+        wp_update_post(
             array(
                 'ID'                => $ingredient_id,
                 'post_modified'     => current_time('mysql'),
@@ -264,7 +264,7 @@ class REST_API{
                 'success' => true,
                 'ingredient_id' => $ingredient_id,
                 'new_stock_status' => $new_status,
-                'last_ipdated' => $timestamp,
+                'last_updated' => $timestamp,
                 'message'   => __('Stock status updated successfully.', 'heirloom-hearth'),
             )
         );
@@ -274,8 +274,8 @@ class REST_API{
 
     /**
      * Build a fully-nested ingredient array including its supplier profiles.
-     * 
-     * @param \WP_Post  %post an hh_ingredient post object.
+     *
+     * @param \WP_Post  $post an hh_ingredient post object.
      * @return array
      */
     private function format_ingredient(\WP_Post $post): array {
@@ -284,8 +284,8 @@ class REST_API{
         $updated = get_post_meta($post->ID, '_hh_last_updated', true);
 
         // Fetch category terms.
-        $terms = get_the_terms($psot->ID, 'hh_ingredient_cat');
-        $category = array();
+        $terms = get_the_terms($post->ID, 'hh_ingredient_cat');
+        $categories = array();
         if (!is_wp_error($terms) && !empty($terms) ) {
             foreach($terms as $term) {
                 $categories[] = array(
@@ -298,10 +298,10 @@ class REST_API{
 
         // Thumbnail (ingredient image).
         $ingredient_image_id = get_post_thumbnail_id($post->ID);
-        $ingredient_image_url = $ingredient_image_id 
+        $ingredient_image_url = $ingredient_image_id
             ? wp_get_attachment_image_url($ingredient_image_id, 'medium')
             : null;
-        
+
         return array(
             'id'            => $post->ID,
             'name'          => $post->post_title,
@@ -315,18 +315,18 @@ class REST_API{
     }
 
     /**
-     * Build the supplier sub-object for nesting insude an ingredient.
-     * 
+     * Build the supplier sub-object for nesting inside an ingredient.
+     *
      * @param int $supplier_id Post ID of the hh_supplier.
-     * @return array|unll Returns null when no valid supplier is linked.
+     * @return array|null Returns null when no valid supplier is linked.
      */
-    private function format_supplier(int $ingredient_id): array {
+    private function format_supplier(int $supplier_id): ?array {
         if ( !$supplier_id ) {
             return null;
         }
 
         $post = get_post( $supplier_id );
-        
+
         if ( !$post || 'hh_supplier' !== $post->post_type || 'publish' !== $post->post_status ) {
             return null;
         }
@@ -338,7 +338,7 @@ class REST_API{
             'id'        => $post->ID,
             'name'      => $post->post_title,
             'slug'      => $post->post_name,
-            'biography' => wp_strip_all_tags($post -> post_content),
+            'biography' => wp_strip_all_tags($post->post_content),
             'location' => get_post_meta($supplier_id, '_hh_farm_location', true),
             'logo_url' => $logo_url,
         );
@@ -355,8 +355,8 @@ class REST_API{
      * @return bool
      */
     private function ingredient_belongs_to_current_user(int $ingredient_id): bool {
-        // Administrators bypass ownsership checks.
-        if ( current_user_can ('manage_options') ) {
+        // Administrators bypass ownership checks.
+        if ( current_user_can('manage_options') ) {
             return true;
         }
 
@@ -380,7 +380,7 @@ class REST_API{
     private function get_collection_args(): array {
         return array(
             'status'    => array(
-                'description'   => __('Filter by stock status.', 'heairloom-hearth'),
+                'description'   => __('Filter by stock status.', 'heirloom-hearth'),
                 'type'          => 'string',
                 'enum'          => Meta_Fields::STOCK_STATUSES,
                 'sanitize_callback' => 'sanitize_key',
@@ -427,12 +427,12 @@ class REST_API{
     }
 
     /**
-     * Validate that the given value resovlves to a published hh_ingredient post.
-     * 
+     * Validate that the given value resolves to a published hh_ingredient post.
+     *
      * @param mixed             $value      The raw param value
      * @param \WP_REST_Request  $request    Request Object.
-     * @param string            $request    Parameter name.
-     * @return bool|\WP_Error   
+     * @param string            $param    Parameter name.
+     * @return bool|\WP_Error
      */
     public function validate_post_id($value, \WP_REST_Request $request, string $param) {
         $id = absint($value);

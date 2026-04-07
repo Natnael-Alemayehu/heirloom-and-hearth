@@ -13,12 +13,12 @@
 
 namespace HeirloomHearth;
 
-define( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 /**
  * Class Supplier_Role
  */
-class Supplier_Role{
+class Supplier_Role {
     /** Slug for the custom role. */
     public const ROLE_SLUG = 'hh_supplier';
 

@@ -30,7 +30,7 @@ The plugin registers two custom Post Types (**Suppliers** and **Daily Ingredient
 | Stock Status | `available`.`low-stock`.`out_of_season` |
 | Ownership enforcement | Suppliers can only update their own ingredients | 
 | Auto-timestamp | `_hh_last_updated` refreshes on every stock change |
-| Caching hint | public GET responses caeey `Cache-Contrl:public, max-age=60` |
+| Caching hit | public GET responses caeey `Cache-Contrl:public, max-age=60` |
 
 ---
 
@@ -163,7 +163,14 @@ curl -X GET "http://hairloom-health.local/wp-json/hh/v1/sourcing?status=availabl
 
 **Example Response - 200 OK**
 ```json
-
+{
+    "success": true,
+    "count": 0,
+    "filter": {
+        "status": "available"
+    },
+    "ingredients": []
+}
 ```
 
 ---
@@ -191,7 +198,25 @@ curl -X GET "http://hairloom-health.local/wp-json/hh/v1/sourcing/42"\
 
 **Example Response - 200 OK**
 ```json
-
+{
+    "success": true,
+    "ingredient": {
+        "id": 8,
+        "name": "First Ingredient",
+        "slug": "first-ingredient",
+        "categories": [
+            {
+                "id": 3,
+                "name": "Ethiopian",
+                "slug": "ethiopia"
+            }
+        ],
+        "stock_status": "available",
+        "last_updated": "2026-04-07T09:46:48Z",
+        "image": null,
+        "supplier": null
+    }
+}
 ```
 
 **Error - 404 Not Found**
@@ -221,8 +246,8 @@ POST /wp-json/hh/v1/sourcing/{id}/stock
 
 **Request Body**(JSON)
 
-|Field|Type|Required|Values|Description|
-|---|---|---|---|
+| Field | Type | Required | Values | Description |
+|---|---|---|---|---|
 |`stock_status` | string | Yes | `available` `low_stock` `out_of_season` | New stock level |
 
 **Example Request**
@@ -245,7 +270,13 @@ curl -X POST "http://hairloom-health.local/wp-json/hh/v1/sourcing/42/stock"\
 
 **Error - 403 Forbidden (wrong supplier)**
 ```json
-
+{
+    "code": "hh_rest_forbidden",
+    "message": "You do not have permission to update stock.",
+    "data": {
+        "status": 403
+    }
+}
 ```
 
 ## Supplier Account Setup

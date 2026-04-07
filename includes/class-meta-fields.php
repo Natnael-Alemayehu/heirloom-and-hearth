@@ -21,7 +21,7 @@
 
 namespace HeirloomHearth;
 
-define ( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 /**
  * Class Meta_fields
@@ -45,9 +45,9 @@ class Meta_Fields {
 
     // Supplier Meta
     /**
-     * Register meta fields fro the `hh_supplier` CPT.
+     * Register meta fields for the `hh_supplier` CPT.
      * 
-     * @return void 
+     * @return void
      */
     private function register_supplier_meta(): void {
         register_post_meta(
@@ -64,7 +64,7 @@ class Meta_Fields {
             )
         );
 
-        register_pist_meta(
+        register_post_meta(
             'hh_supplier',
             '_hh_farm_logo_id',
             array(
@@ -120,7 +120,7 @@ class Meta_Fields {
             array(
                 'type'          => 'string',
                 'description'   => 'ISO-8601 timestamp of the last stock status change.',
-                'single'        => 'true',
+                'single'        => true,
                 'default'       => '',
                 'show_in_rest'  => true,
                 'auth_callback' => '__return_false',
@@ -149,15 +149,15 @@ class Meta_Fields {
      */
     public function sanitize_stock_status($value): string {
         $value = sanitize_key((string) $value);
-        return in_array($value, self::STOCK_STASUSES, true) ? $value : 'available';
+        return in_array($value, self::STOCK_STATUSES, true) ? $value : 'available';
     }
 
     /**
      * Automatically set _hh_last_updated to the current UTC timestamp
      * whenever an ingredient post is saved.
      * 
-     * Skips auto-saves, revisions, and cases where the status is not 
-     * being written by our own API (to avoid ininite loops).
+     * Skips auto-saves, revisions, and cases where the status is not
+     * being written by our own API (to avoid infinite loops).
      * 
      * @param   int         $post_id    Post ID.
      * @param   /WP_Post    $post       Post object.
@@ -172,12 +172,12 @@ class Meta_Fields {
         // Prevent update_post_meta from triggering save_post again.
         remove_action('save_post_hh_ingredient', array($this, 'refresh_last_updated'), 10);
 
-        upadte_post_meta(
+        update_post_meta(
             $post_id,
             '_hh_last_updated',
             gmdate('Y-m-d\TH:i:s\Z')
         );
 
-        add_action('save_post_hh_ingredient', array($this, 'refreh_last_updated'), 10, 3);
+        add_action('save_post_hh_ingredient', array($this, 'refresh_last_updated'), 10, 3);
     }
 }
